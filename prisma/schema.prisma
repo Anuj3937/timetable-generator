@@ -1,0 +1,112 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Department {
+  id        String    @id @default(cuid())
+  name      String
+  code      String    @unique
+  faculties Faculty[]
+  subjects  Subject[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Faculty {
+  id             String                @id @default(cuid())
+  name           String
+  email          String                @unique
+  department     Department            @relation(fields: [departmentId], references: [id])
+  departmentId   String
+  seniority      String
+  theoryHours    Int                   @default(0)
+  practicalHours Int                   @default(0)
+  totalHours     Int                   @default(0)
+  subjectFaculty SubjectFacultyLink[]
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+}
+
+model Subject {
+  id             String                @id @default(cuid())
+  name           String
+  code           String                @unique
+  department     Department            @relation(fields: [departmentId], references: [id])
+  departmentId   String
+  year           String
+  theoryHours    Int                   @default(0)
+  practicalHours Int                   @default(0)
+  totalHours     Int                   @default(0)
+  facultySubject SubjectFacultyLink[]
+  timetableSlots TimetableSlot[]
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+}
+
+model SubjectFacultyLink {
+  id        String   @id @default(cuid())
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+  subjectId String
+  faculty   Faculty  @relation(fields: [facultyId], references: [id])
+  facultyId String
+  type      String   @default("theory") // theory or practical
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([subjectId, facultyId, type])
+}
+
+model Timetable {
+  id           String          @id @default(cuid())
+  name         String
+  year         String
+  departmentId String
+  semester     String
+  isActive     Boolean         @default(false)
+  slots        TimetableSlot[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+model TimetableSlot {
+  id          String   @id @default(cuid())
+  timetable   Timetable @relation(fields: [timetableId], references: [id])
+  timetableId String
+  subject     Subject  @relation(fields: [subjectId], references: [id])
+  subjectId   String
+  day         String
+  startTime   String
+  endTime     String
+  type        String   @default("theory") // theory or practical
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  type      String   @default("info") // info, warning, error
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
